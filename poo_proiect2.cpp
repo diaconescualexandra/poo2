@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-
+#include <sstream>
 class Persoana {
 
     private:
@@ -35,6 +35,10 @@ class Persoana {
             return nume;
         }
 
+        int get_id() const{
+            return id;
+        }
+
         //functie statica
         static int getNumarPersoane()
         {
@@ -64,8 +68,45 @@ class Persoana {
      }
 };
 
+//memorarea a n obiecte din clasa persoana
+
+std::vector<Persoana> memorarepersoane(int n)
+{
+    std::vector<Persoana> objects;
+
+    for (int i = 0; i <= n; i++)
+    {
+        Persoana obj = Persoana ();
+        objects.push_back(obj);
+        
+    }
+    return objects;
+}
+
+
+// citirea a n obiecte din clasa persoana
+
+void citirenobiecte( std::vector<Persoana> &objects)
+{
+    for (int i = 0; i <= objects.size(); i++)
+    {
+        std::cin>>objects[i];
+
+    }
+}
+
+// afisarea a n obiecte din clasa persoana
+
+void afisarenobiecte( const std::vector<Persoana> &objects)
+{
+    for (int i = 0; i <= objects.size(); i++)
+    {
+        std::cout << objects[i]<<std::endl;
+    }
+}
+
 //initializare var statica
-int Persoana::numar_persoane = 0;
+int Persoana::numar_persoane = 8;
 
 class Abonat : public Persoana{
     private:
@@ -182,11 +223,26 @@ class Agenda {
     //constr neparam
     Agenda () {}
     //constr param
-    Agenda(std::vector<Abonat_Skype_Extern *> subscribers) : subscribers(subscribers) {}
+    Agenda(const Abonat_Skype_Extern &subscriber)
+    {
+            subscribers.push_back(new Abonat_Skype_Extern(subscriber));
+    }
+
     //copy constr
     Agenda(const Agenda& agenda): subscribers(agenda.subscribers) {}
 
-    ~Agenda( ) {}
+    ~Agenda() {
+        for (int i = 0; i < subscribers.size(); i++)
+        {
+            Abonat_Skype_Extern *sub = subscribers[i];
+            delete sub;
+        }
+    }
+
+    std::vector<Abonat_Skype_Extern *> get_subscribers() const
+    {
+            return subscribers;
+    }
 
     Agenda operator=(const Agenda& ob)
     {
@@ -197,51 +253,56 @@ class Agenda {
             return *this;
     }
 
-    friend std::istream &operator>>(std::istream &is, Agenda &a)
+    friend std::istream& operator>>(std::istream &is, Agenda &a)
     {
-            for (Abonat_Skype_Extern *&subscriber : a.subscribers)
+            for (int i = 0; i < a.subscribers.size(); i++)
             {
+                Abonat_Skype_Extern *&subscriber = a.subscribers[i];
                 is >> *subscriber;
             }
             return is;
     }
 
-    friend std::ostream &operator<<(std::ostream& os, Agenda &a)
+    friend std::ostream &operator<<(std::ostream &os, const Agenda &a)
     {
-            for (Abonat_Skype_Extern *&subscriber : a.subscribers)
+            for (int i = 0; i < a.subscribers.size(); i++)
             {
-                os << *subscriber ;
+                const Abonat_Skype_Extern *subscriber = a.subscribers[i];
+                os << *subscriber << std::endl;
             }
             return os;
     }
 
-    const std::string &get_nume(const Abonat_Skype_Extern *subscriber) const
+    std::string get_id(const std::string &nume) const
     {
-            for (const auto &sub : subscribers)
+            for (int i = 0; i < subscribers.size(); i++)
             {
-                if (sub == subscriber)
+                const Abonat_Skype_Extern *sub = subscribers[i];
+                if (sub->get_nume() == nume)
                 {
-                    return sub->get_nume();
+                    std::ostringstream out;
+                    out << sub->get_id();
+                    return out.str();
                 }
             }
-            throw std::runtime_error("Subscriber not found!");
+
+            throw std::runtime_error("Subscriber not found");
     }
 
     //overload []
 
-    Abonat_Skype_Extern& operator[](const std::string &nume)
+    int operator[](const std::string &name) const
     {
         for (int i = 0; i < subscribers.size(); i++)
+        {
+            if (subscribers[i]->get_nume() == name)
             {
-                if (subscribers[i]->get_nume() == nume)
-                {
-                    return *subscribers[i];
-                }
+                return subscribers[i]->get_id();
+            }
         }
-        throw std::runtime_error("Subscriber not found!");
+
+            throw std::runtime_error("Subscriber not found!");
     }
-
-
 };
 
 int main()
@@ -266,8 +327,14 @@ int main()
         std::cout << "failed";
     }
 
-    
-    //std::cout<< Persoana::getNumarPersoane();
+    Abonat_Skype_Extern subscriber1(1, "09877", "John", "123", "bhwkb", "bbk");
+    Agenda agenda(subscriber1);
+
+    std::cout << agenda["John"] << std::endl;
+
+    std::cout<< Persoana::getNumarPersoane();
+
+
 
     return 0;
 }
